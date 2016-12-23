@@ -1,8 +1,16 @@
+#git
 .git/
-.idea/
-node_modules/
-storage/
 
+#IDE
+.idea/
 Homestead.yaml
 Homestead.json
+
+#nodejs
+node_modules/
+npm-debug.log
+
 .env
+.env.*.php
+.env.php
+
