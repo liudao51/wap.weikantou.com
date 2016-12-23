@@ -30,4 +30,14 @@ return [
 
     'compiled' => realpath(storage_path('framework/views')),
 
+    /*
+    |--------------------------------------------------------------------------
+    | Theme name
+    |--------------------------------------------------------------------------
+    |
+    | This is templates theme name.
+    |
+    */
+
+    'theme' => 'default',   //resources/views/目录下的主题文件夹名称
 ];

@@ -13,4 +13,5 @@
 
 Route::get('/', function () {return view('welcome');});  // 网站首页
 
-Route::controller('/demo','Api\DemoController');
+Route::controller('/demo','Home\DemoController');
+Route::controller('/account','Home\AccountController');

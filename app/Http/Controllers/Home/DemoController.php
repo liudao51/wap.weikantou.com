@@ -6,12 +6,11 @@
  * Time: 13:23
  */
 
-namespace App\Http\Controllers\Api;
+namespace App\Http\Controllers\Home;
 
 use App\Http\Requests;
 use App\Libs\ErrorInfo;
 use App\Libs\Toolkit;
-use App\Services\RegionService;
 use Illuminate\Http\Request;
 
 /**

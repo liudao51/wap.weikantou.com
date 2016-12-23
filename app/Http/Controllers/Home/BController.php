@@ -5,11 +5,13 @@
  * Date: 16/10/21
  * Time: 11:25
  */
-namespace App\Http\Controllers\Api;
+namespace App\Http\Controllers\Home;
 
 use App\Http\Controllers\Controller;
 use App\Libs\ErrorInfo;
 use App\Libs\ResponseError;
+use App\Libs\Toolkit;
+use App\Libs\ViewError;
 use Illuminate\Http\Request;
 use Symfony\Component\HttpFoundation\ParameterBag;
 
@@ -45,22 +47,22 @@ class BController extends Controller
      */
     protected function responseFail($errorMsg, $errorCode, $errorType = ResponseError::ERROR_TYPE_FATAL, $statusCode = '200')
     {
-        $errorMsg = (isset($errorMsg) && is_string($errorMsg)) ? trim($errorMsg) : null;
+        $errorMsg = Toolkit::is_string($errorMsg) ? trim($errorMsg) : null;
         if (!isset($errorMsg) || $errorMsg == '') {
             $errorMsg = ErrorInfo::Errors('2000', ErrorInfo::TYPE_MSG);  //未知错误
         }
 
-        $errorCode = (isset($errorCode) && (is_numeric($errorCode) || is_string($errorCode))) ? trim($errorCode) : null;
+        $errorCode = Toolkit::is_integer($errorCode) ? trim($errorCode) : null;
         if (!isset($errorCode) || $errorCode == '') {
             $errorCode = '2000';  //未知类型
         }
 
-        $errorType = (isset($errorType) && (is_numeric($errorType) || is_string($errorType))) ? trim($errorType) : null;
+        $errorType = Toolkit::is_integer($errorType) ? trim($errorType) : null;
         if (!isset($errorType) || $errorType == '') {
             $errorType = ResponseError::ERROR_TYPE_FATAL;
         }
 
-        $statusCode = (isset($statusCode) && (is_numeric($statusCode) || is_string($statusCode))) ? trim($statusCode) : null;
+        $statusCode = Toolkit::is_integer($statusCode) ? trim($statusCode) : null;
         if (!isset($statusCode) || $statusCode == '') {
             $statusCode = '200';
         }
@@ -89,6 +91,53 @@ class BController extends Controller
         $error->errorMsg = ErrorInfo::Errors('0', ErrorInfo::TYPE_MSG); //成功
 
         return $this->_response($data, $error);
+    }
+
+    /**
+     * 返回失败视图
+     *
+     * @param $view
+     * @param $errorMsg
+     * @param $errorCode
+     * @param array $mergeData
+     * @param null $theme
+     * @return mixed
+     */
+    protected function responseFailView($view = null, $errorMsg = '', $errorCode = '2000', $mergeData = [], $theme = null)
+    {
+        $view = Toolkit::is_string($view) ? trim($view) : null;
+        if (!isset($view) || $view == '') {
+            $view = ViewError::VIEW_ERROR_1;
+        }
+
+        $errorMsg = Toolkit::is_string($errorMsg) ? trim($errorMsg) : null;
+        if (!isset($errorMsg) || $errorMsg == '') {
+            $errorMsg = ErrorInfo::Errors('2000', ErrorInfo::TYPE_MSG);  //未知错误
+        }
+
+        $errorCode = Toolkit::is_integer($errorCode) ? trim($errorCode) : null;
+        if (!isset($errorCode) || $errorCode < 0) {
+            $errorCode = '2000';  //未知类型
+        }
+
+        $data['errcode'] = $errorCode;
+        $data['errmsg'] = $errorMsg;
+
+        return $this->_responseView($view, $data, $mergeData, $theme);
+    }
+
+    /**
+     * 返回成功视图
+     *
+     * @param null $view
+     * @param array $data
+     * @param array $mergeData
+     * @param null $theme
+     * @return mixed
+     */
+    protected function responseSuccView($view = null, $data = [], $mergeData = [], $theme = null)
+    {
+        return $this->_responseView($view, $data, $mergeData, $theme);
     }
 
     /**
@@ -159,7 +208,7 @@ class BController extends Controller
      * 格式化返回数据
      *
      * @param array $data 返回数据
-     * @param MyError|null $error 错误信息对象
+     * @param ResponseError|null $error 错误信息对象
      * @return array
      */
     private function _response($data, ResponseError $error = null)
@@ -174,20 +223,38 @@ class BController extends Controller
         }
 
         $result = [
-            'statusCode' => $error->statusCode . '',
-            'responseBody' => [
-                'responseInfo' => [
-                    'reasons' => [
-                        'code' => $error->errorCode . '',
-                        'type' => $error->errorType . '',
-                        'msg' => $error->errorMsg . ''
-                    ]
-                ],
-                'data' => $data
-            ]
+            'errcode' => $error->errorCode . '',
+            'errmsg' => $error->errorMsg . '',
+            'data' => $data
         ];
 
         return $result;
+    }
+
+    /**
+     * 格式化返回视图数据
+     *
+     * @param null $view
+     * @param array $data
+     * @param array $mergeData
+     * @param null $theme
+     * @return mixed
+     */
+    private function _responseView($view = null, $data = [], $mergeData = [], $theme = null)
+    {
+        $view = Toolkit::is_string($view) ? trim($view) : '';
+        $data = Toolkit::is_array($data) ? $data : [];
+        $mergeData = Toolkit::is_array($mergeData) ? $mergeData : [];
+        $theme = Toolkit::is_string($theme) ? trim($theme) : config('view.theme', 'default');
+
+        $view = ($theme == '') ? $view : "{$theme}.{$view}";
+
+        $data['doc']['theme'] = $theme;
+        $data['doc']['themePath'] = 'theme/' . $theme;
+
+        $postData['data'] = $data;
+
+        return view($view, $postData, $mergeData);
     }
 
     /**
